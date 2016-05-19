@@ -1,5 +1,7 @@
 package me.safrain.validator.expression;
 
+import me.safrain.validator.expression.segments.PathSegment;
+
 import java.util.ArrayList;
 import java.util.List;
 

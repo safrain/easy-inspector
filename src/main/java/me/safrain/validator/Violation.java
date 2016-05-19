@@ -3,12 +3,16 @@ package me.safrain.validator;
 import me.safrain.validator.expression.Expression;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Iterator;
 
 public class Violation {
-    public Method method;
-    public Expression expression;
-    public Throwable throwable;
-    public String message;
+    private Method method;
+    private Expression expression;
+    private Throwable throwable;
+    private String message;
+    private Object object;
+    private Object[] args;
 
     public Violation(String message) {
         this.message = message;
@@ -17,6 +21,19 @@ public class Violation {
     public Violation(Method method, Expression expression) {
         this.method = method;
         this.expression = expression;
+    }
+
+    public Violation(Method method, Expression expression, Object object) {
+        this.method = method;
+        this.expression = expression;
+        this.object = object;
+    }
+
+    public Violation(Method method, Expression expression, Object object, Throwable throwable) {
+        this.method = method;
+        this.expression = expression;
+        this.object = object;
+        this.throwable = throwable;
     }
 
     public Violation(Method method, Expression expression, Throwable throwable) {
@@ -30,5 +47,77 @@ public class Violation {
     }
 
     public Violation() {
+    }
+
+    public String getCommand() {
+        return method.getDeclaringClass().getName() + "." + method.getName();
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder s = new StringBuilder();
+        s.append("Violation [");
+        for (Iterator<String> iterator = Arrays.asList(
+                method != null ? "command=" + getCommand() : null,
+                expression != null ? "expression=" + expression.getExpression() : null,
+                message != null ? "message=" + message : null,
+                args != null ? "args=" + Arrays.toString(args) : null
+        ).iterator(); iterator.hasNext(); ) {
+            String string = iterator.next();
+            if (string == null) continue;
+            s.append(string);
+            if (iterator.hasNext()) s.append(", ");
+        }
+        s.append("]");
+        return s.toString();
+
+    }
+
+    public Method getMethod() {
+        return method;
+    }
+
+    public void setMethod(Method method) {
+        this.method = method;
+    }
+
+    public Expression getExpression() {
+        return expression;
+    }
+
+    public void setExpression(Expression expression) {
+        this.expression = expression;
+    }
+
+    public Throwable getThrowable() {
+        return throwable;
+    }
+
+    public void setThrowable(Throwable throwable) {
+        this.throwable = throwable;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public Object getObject() {
+        return object;
+    }
+
+    public void setObject(Object object) {
+        this.object = object;
+    }
+
+    public Object[] getArgs() {
+        return args;
+    }
+
+    public void setArgs(Object[] args) {
+        this.args = args;
     }
 }

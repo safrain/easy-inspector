@@ -1,4 +1,6 @@
-package me.safrain.validator.expression;
+package me.safrain.validator.expression.segments;
+
+import me.safrain.validator.expression.SegmentContext;
 
 public interface PathSegment {
 

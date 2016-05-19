@@ -2,6 +2,7 @@ package me.safrain.validator;
 
 import me.safrain.validator.expression.Expression;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,6 +10,31 @@ public class V {
     public static StringRules string;
     public static NumberRules number;
     public static CommonRules common;
+    public static ArrayRules array;
+
+    public static class ArrayRules {
+        public boolean isArray(Object obj) {
+            return obj != null && obj.getClass().isArray();
+        }
+
+        public boolean isList(Object obj) {
+            return obj instanceof List;
+        }
+
+        public boolean isArrayOrList(Object obj) {
+            return isArray(obj) || isList(obj);
+        }
+
+        public boolean notEmpty(Object obj) {
+            if (isArray(obj)) {
+                return Array.getLength(obj) > 0;
+            }
+            if (isList(obj)) {
+                return !((List) obj).isEmpty();
+            }
+            return false;
+        }
+    }
 
     public static class CommonRules {
         public boolean isNull(Object obj) {
@@ -26,6 +52,18 @@ public class V {
     }
 
     public static class NumberRules {
+        public boolean inRange(Object obj, Integer from, Integer to) {
+            if (!(obj instanceof Number)) return false;
+            int val = ((Number) obj).intValue();
+            if (from != null) {
+                if (val < from) return false;
+            }
+            if (to != null) {
+                if (val > to) return false;
+            }
+            return true;
+        }
+
         public boolean isInteger(Object obj) {
             return obj instanceof Integer;
         }

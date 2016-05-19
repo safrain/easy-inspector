@@ -1,19 +1,22 @@
 package me.safrain.validator
 
-import me.safrain.validator.expression.AllArrayElementSegment
-import me.safrain.validator.expression.AllPropertySegment
-import me.safrain.validator.expression.ArrayIndexAccessSegment
-import me.safrain.validator.expression.DefaultExpressionResolver
-import me.safrain.validator.expression.PropertySegment
+import me.safrain.validator.expression.resolver.ANTLRExpressionResolver
+import me.safrain.validator.expression.segments.*
 import org.junit.Before
 import org.junit.Test
 
 class ExpressionResolverTest {
-    DefaultExpressionResolver resolver
+    ANTLRExpressionResolver resolver
 
     @Before
     void setup() {
-        resolver = new DefaultExpressionResolver()
+        resolver = new ANTLRExpressionResolver()
+    }
+
+    @Test
+    void plain0() {
+        def e = resolver.resolve('?a')
+        println e
     }
 
     @Test
@@ -54,15 +57,6 @@ class ExpressionResolverTest {
         }
     }
 
-    @Test
-    void duplicate() {
-        resolver.resolve('?////////////').with {
-            assert !it.segments
-        }
-        resolver.resolve('?///a///b///c///').with {
-            assert it.segments.size() == 3
-        }
-    }
 
     @Test
     void escape() {
@@ -85,7 +79,7 @@ class ExpressionResolverTest {
             assert it.segments.size() == 3
             assert it.segments[0] instanceof PropertySegment
             assert it.segments[1] instanceof PropertySegment
-            assert it.segments[2] instanceof AllPropertySegment
+            assert it.segments[2] instanceof AnyPropertySegment
         }
     }
 
@@ -105,7 +99,7 @@ class ExpressionResolverTest {
 
         resolver.resolve('s1/s2/*').with {
             assert it.segments[0..1].every { it instanceof PropertySegment }
-            assert it.segments[2] instanceof AllPropertySegment
+            assert it.segments[2] instanceof AnyPropertySegment
         }
     }
 
@@ -125,7 +119,34 @@ class ExpressionResolverTest {
         resolver.resolve('a[*]').with {
             assert it.segments.size() == 2
             assert it.segments[0] instanceof PropertySegment
-            assert it.segments[1] instanceof AllArrayElementSegment
+            assert it.segments[1] instanceof EveryArrayElementSegment
+        }
+    }
+
+    @Test
+    void arrayRange() {
+        resolver.resolve('a[0..1]').with {
+            assert it.segments.size() == 2
+            assert it.segments[0] instanceof PropertySegment
+            assert it.segments[1] instanceof ArrayRangeAccessSegment
+        }
+
+    }
+
+    @Test
+    void arrayRangeReverse() {
+        resolver.resolve('a[9..-1]').with {
+            assert it.segments.size() == 2
+            assert it.segments[0] instanceof PropertySegment
+            assert it.segments[1] instanceof ArrayRangeAccessSegment
+        }
+
+        resolver.resolve('a/b[-1..0]').with {
+            assert it.segments.size() == 3
+            assert it.segments[0] instanceof PropertySegment
+            assert it.segments[1] instanceof PropertySegment
+            assert it.segments[2] instanceof ArrayRangeAccessSegment
+
         }
     }
 

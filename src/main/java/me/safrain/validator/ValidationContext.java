@@ -1,6 +1,6 @@
 package me.safrain.validator;
 
-import me.safrain.validator.expression.PathSegment;
+import me.safrain.validator.expression.segments.PathSegment;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;

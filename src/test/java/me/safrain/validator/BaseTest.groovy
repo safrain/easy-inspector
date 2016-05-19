@@ -12,6 +12,7 @@ class BaseTest {
         V.common = inspector.proxy(V.CommonRules)
         V.string = inspector.proxy(V.StringRules)
         V.number = inspector.proxy(V.NumberRules)
+        V.array = inspector.proxy(V.ArrayRules)
     }
 
     @Test
@@ -37,7 +38,7 @@ class BaseTest {
         ], {
             V.string.isString('a')
             V.string.notEmpty('/b')
-            V.common.isNull('//c')
+            V.common.isNull('/c')
             V.number.notZero('/%%')
         } as Validator).with {
             assert !it
@@ -64,24 +65,28 @@ class BaseTest {
         }).with {
             assert it.size() == 1
             assert it[0].expression.expression == 'b'
+            println it[0]
+            println it[0].getCommand()
+            println it[0].expression.expression
+            println it[0].object
         }
     }
 
     @Test
-    void wrongType() {
+    void wrongTypeOptional() {
         inspector.validate([
                 a: '1'
         ]) {
             V.string.isString '?a/*'
         }.with {
-            assert !it
+            assert it
         }
     }
 
     @Test
     void optionalMultiLevel() {
         inspector.validate([
-                a: '1'
+                a: [:]
         ]) {
             V.string.isString '?a/b/*'
         }.with {
@@ -164,8 +169,7 @@ class BaseTest {
     }
 
     @Test
-    void allProperty() {
-        // Any property
+    void everyProperty() {
         inspector.validate([
                 a: '1',
                 b: '2',
@@ -174,6 +178,118 @@ class BaseTest {
             V.string.isString '*'
         }.with {
             assert !it
+        }
+    }
+
+    @Test
+    void everyPropertyEmpty() {
+        inspector.validate([
+                :
+        ]) {
+            V.string.isString '*'
+            V.string.isString '*/*'
+        }.with {
+            assert !it
+        }
+    }
+
+    @Test
+    void anyProperty() {
+        inspector.validate([
+                a: '1',
+                b: 2,
+                c: '3',
+        ]) {
+            V.number.isInteger('/?')
+        }.with {
+            assert !it
+        }
+    }
+
+    @Test
+    void anyPropertyOptional() {
+        inspector.validate([
+                a: null,
+        ]) {
+            V.number.isInteger('?/a/?')
+        }.with {
+            assert !it
+        }
+    }
+
+    @Test
+    void anyPropertyViolation() {
+        inspector.validate([
+                a: '1',
+                b: '2',
+                c: '3',
+        ]) {
+            V.number.isInteger('/?')
+        }.with {
+            assert it
+        }
+
+        inspector.validate([
+                :
+        ]) {
+            V.number.isInteger('/?')
+        }.with {
+            assert it
+        }
+    }
+
+    @Test
+    void anyPropertyNested() {
+        inspector.validate([
+                a: '1',
+                b: [
+                        b1: 1,
+                        b2: 2
+                ],
+                c: '3',
+        ]) {
+            V.number.isInteger('/?/?')
+        }.with {
+            assert !it
+        }
+    }
+
+    @Test
+    void iterativePropertyMix() {
+        inspector.validate([
+                a: [
+                        b1: 0,
+                        b2: ' '
+                ],
+                b: [
+                        b3: 0,
+                        b4: ' '
+                ],
+                c: [
+                        b5: 1,
+                        b6: 1,
+                ],
+        ]) {
+            V.number.isInteger('/*/?')
+            V.number.isInteger('/?/*')
+        }.with {
+            assert !it
+        }
+    }
+
+    @Test
+    void anyPropertyNestedViolation() {
+        inspector.validate([
+                a: '1',
+                b: [
+                        b1: '1',
+                        b2: '2'
+                ],
+                c: '3',
+        ]) {
+            V.number.isInteger('/?/?')
+        }.with {
+            assert it
         }
     }
 
@@ -201,12 +317,12 @@ class BaseTest {
                 c: [1],
         ]) {
             V.string.notEmpty('a[0]')
-            V.string.notEmpty('a[1]')
-            V.string.notEmpty('a[2]')
-            V.string.notEmpty('a/[2]')
-            V.common.isEquals('a[-1]', '3')
-            V.common.isEquals('a[-2]', '2')
-            V.common.isEquals('c[-1]', 1)
+//            V.string.notEmpty('a[1]')
+//            V.string.notEmpty('a[2]')
+//            V.string.notEmpty('a/[2]')
+//            V.common.isEquals('a[-1]', '3')
+//            V.common.isEquals('a[-2]', '2')
+//            V.common.isEquals('c[-1]', 1)
         }.with {
             assert !it
         }
@@ -240,10 +356,9 @@ class BaseTest {
 
     @Test
     void arrayViolationOptional() {
-        inspector.validate([1, 2, 3]) {
+        inspector.validate([1, 2, [:]]) {
             V.number.isInteger '?[5]'
-            V.number.isInteger '?[1]/t'
-            V.number.isInteger '?[5]/t'
+            V.number.isInteger '?[2]/t'
         }.with {
             assert !it
         }
@@ -255,6 +370,19 @@ class BaseTest {
             V.number.isInteger '[*]'
         }.with {
             assert !it
+        }
+    }
+
+    @Test
+    void IterativeViolation() {
+        inspector.validate([
+                [a: 1],
+                [a: '2'],
+                [a: 3],
+        ]) {
+            V.number.isInteger '[*]/a'
+        }.with {
+            assert it.size() == 1
         }
     }
 
@@ -288,5 +416,68 @@ class BaseTest {
             assert it.size() == 1
         }
     }
+
+    @Test
+    void arrayRange() {
+        inspector.validate([1, 2, 3, 4, 5, 6]) {
+            V.number.inRange('[2..5]', 3, 6)
+        }.with {
+            assert !it
+        }
+        inspector.validate([1, 2, 3, 4, 5, 6]) {
+            V.number.inRange('[2..-1]', 3, 6)
+        }.with {
+            assert !it
+        }
+        inspector.validate([1, 2, 3, 4, 5, 6]) {
+            V.number.inRange('[2..-1]', 5, 6)
+        }.with {
+            assert it.size() == 1
+        }
+
+    }
+
+    @Test
+    void arrayRangeSame() {
+        inspector.validate([1, 2, 3, 4, 5, 6]) {
+            V.common.isEquals('[3..3]', 4)
+        }.with {
+            assert !it
+        }
+    }
+
+    @Test
+    void nestedIterative() {
+        inspector.validate([
+                a: [
+                        a: [1, 2, 3]
+                ],
+                b: [
+                        a: [1, 2, 3]
+                ]
+        ]) {
+            V.number.isInteger('*/a/[*]')
+        }.with {
+            assert !it
+        }
+    }
+
+    @Test
+    void nestedIterativeViolation() {
+        inspector.validate([
+                a: [
+                        a: [1, '2', '3']
+                ],
+                b: [
+                        a: [1, '2', '3']
+                ]
+        ]) {
+            V.number.isInteger('*/a/[*]')
+        }.with {
+            assert it.size() == 1
+        }
+    }
+
+
 }
 

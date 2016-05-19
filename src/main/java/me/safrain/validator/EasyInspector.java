@@ -2,7 +2,12 @@ package me.safrain.validator;
 
 import me.safrain.validator.accessor.ArrayAccessor;
 import me.safrain.validator.accessor.PropertyAccessor;
-import me.safrain.validator.expression.*;
+import me.safrain.validator.expression.Expression;
+import me.safrain.validator.expression.SegmentContext;
+import me.safrain.validator.expression.ValidateCommand;
+import me.safrain.validator.expression.resolver.ANTLRExpressionResolver;
+import me.safrain.validator.expression.resolver.CachingExpressionResolver;
+import me.safrain.validator.expression.resolver.ExpressionResolver;
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
@@ -15,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 public class EasyInspector {
-    ExpressionResolver expressionResolver = new DefaultExpressionResolver();
+    ExpressionResolver expressionResolver = new CachingExpressionResolver(new ANTLRExpressionResolver());
 
     public static ThreadLocal<ValidationContext> contextThreadLocal = new InheritableThreadLocal<ValidationContext>();
 
@@ -23,8 +28,13 @@ public class EasyInspector {
         @Override
         public boolean accept(Object object) {
             if (!(object instanceof Map)) return false;
-            for (Object o : ((Map) object).keySet()) {
-                if (!(o instanceof String)) return false;
+            return true;
+        }
+
+        @Override
+        public boolean accept(Object object, String propertyName) {
+            if (!((Map) object).keySet().contains(propertyName)) {
+                return false;
             }
             return true;
         }
@@ -100,8 +110,11 @@ public class EasyInspector {
             context.easyInspector = this;
         }
         context.push(object);
-        validator.apply();
-        context.pop();
+        try {
+            validator.apply();
+        } finally {
+            context.pop();
+        }
         if (context.isStackEmpty()) {
             contextThreadLocal.remove();
         }
@@ -124,11 +137,13 @@ public class EasyInspector {
 
                 // Setup context to process in segments
                 SegmentContext segmentContext = new SegmentContext();
-                segmentContext.validationContext = context;
-                segmentContext.expression = expression;
-                segmentContext.propertyAccessor = propertyAccessor;
-                segmentContext.arrayAccessor = arrayAccessor;
-                segmentContext.validateCommand = new ValidateCommand() {
+                segmentContext.setValidationContext(context);
+                segmentContext.setMethod(method);
+                segmentContext.setExpression(expression);
+                segmentContext.setPropertyAccessor(propertyAccessor);
+                segmentContext.setArrayAccessor(arrayAccessor);
+                segmentContext.setArgs(args);
+                segmentContext.setValidateCommand(new ValidateCommand() {
                     @Override
                     public boolean validate(Object object) throws Throwable {
                         Object[] newArgs = new Object[args.length];
@@ -138,9 +153,8 @@ public class EasyInspector {
                         // Call the actual method
                         return (Boolean) proxy.invokeSuper(obj, newArgs);
                     }
-                };
-
-                return segmentContext.apply(context.getRootObject(), 0, expression.isOptional());
+                });
+                return segmentContext.getExpression().getSegments().get(0).process(context.getRootObject(), 0, segmentContext, expression.isOptional());
             }
         });
 
