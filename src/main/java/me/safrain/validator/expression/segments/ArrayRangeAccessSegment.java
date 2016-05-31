@@ -2,9 +2,6 @@
 package me.safrain.validator.expression.segments;
 
 import me.safrain.validator.expression.SegmentContext;
-import me.safrain.validator.expression.resolver.ExpressionResolver;
-
-import java.util.Iterator;
 
 public class ArrayRangeAccessSegment implements PathSegment {
 
@@ -19,30 +16,36 @@ public class ArrayRangeAccessSegment implements PathSegment {
     @Override
     public boolean process(final Object object, int index, final SegmentContext context, boolean optional) {
         if (!context.getArrayAccessor().accept(object)) {
-            return context.checkNullOptional(object);
+            return context.onRejected(object);
         }
         int size = context.getArrayAccessor().size(object);
 
         int actualIndexFrom = arrayIndexFrom > 0 ? arrayIndexFrom : size - arrayIndexFrom;
         int actualIndexTo = arrayIndexTo > 0 ? arrayIndexTo : size + arrayIndexTo;
 
+        // Check out of bound
+        if (!context.getArrayAccessor().accept(object, actualIndexFrom) || !context.getArrayAccessor().accept(object, actualIndexTo)) {
+            return context.onRejected(null);
+        }
+
+
         boolean reverse = actualIndexTo < actualIndexFrom;
 
-        context.suppress(this);
+        context.activateSuppressMode(this, false);
         try {
-            boolean last = context.isLast(index);
+            boolean last = context.isLastSegment(index);
             for (int i = actualIndexFrom;
                  reverse ? (i > actualIndexTo) : (i < actualIndexTo);
                  i += reverse ? -1 : 1) {
                 Object o = context.getArrayAccessor().accessIndex(object, i);
                 if (!(last ?
-                        context.checkValidation(o) :
-                        context.get(index + 1).process(o, index + 1, context, optional))) {
+                        context.onValidation(o) :
+                        context.getSegment(index + 1).process(o, index + 1, context, optional))) {
                     return false;
                 }
             }
         } finally {
-            context.unsuppress(this);
+            context.deactivateSuppressMode(this);
         }
         return false;
     }

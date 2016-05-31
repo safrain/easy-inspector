@@ -2,7 +2,6 @@
 package me.safrain.validator.expression.segments;
 
 import me.safrain.validator.expression.SegmentContext;
-import me.safrain.validator.expression.resolver.ExpressionResolver;
 
 public class ArrayIndexAccessSegment implements PathSegment {
     int arrayIndex;
@@ -14,18 +13,18 @@ public class ArrayIndexAccessSegment implements PathSegment {
     @Override
     public boolean process(Object object, int index, SegmentContext context, boolean optional) {
         if (!context.getArrayAccessor().accept(object)) {
-            return context.checkNullOptional(object);
+            return context.onRejected(object);
         }
         if (!context.getArrayAccessor().accept(object, arrayIndex)) {
-            return context.checkNullOptional(null);
+            return context.onRejected(null);
         }
 
 
         Object o = context.getArrayAccessor().accessIndex(object, arrayIndex);
-        if (context.isLast(index)) {
-            return context.checkValidation(o);
+        if (context.isLastSegment(index)) {
+            return context.onValidation(o);
         } else {
-            return context.get(index + 1).process(o, index, context, optional);
+            return context.getSegment(index + 1).process(o, index, context, optional);
         }
     }
 

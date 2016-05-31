@@ -9,24 +9,23 @@ public class EveryArrayElementSegment implements PathSegment {
     @Override
     public boolean process(final Object object, int index, final SegmentContext context, boolean optional) {
         if (!context.getArrayAccessor().accept(object)) {
-            return context.checkNullOptional(object);
+            return context.onRejected(object);
         }
         int size = context.getArrayAccessor().size(object);
 
-        //
-        context.suppress(this);
+        context.activateSuppressMode(this, false);
         try {
-            boolean last = context.isLast(index);
+            boolean last = context.isLastSegment(index);
             for (int i = 0; i < size; i++) {
                 Object o = context.getArrayAccessor().accessIndex(object, i);
                 if (!(last ?
-                        context.checkValidation(o) :
-                        context.get(index + 1).process(o, index + 1, context, optional))) {
+                        context.onValidation(o) :
+                        context.getSegment(index + 1).process(o, index + 1, context, optional))) {
                     return false;
                 }
             }
         } finally {
-            context.unsuppress(this);
+            context.deactivateSuppressMode(this);
         }
         return true;
     }

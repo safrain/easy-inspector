@@ -10,7 +10,7 @@ public class V {
     public static StringRules string;
     public static NumberRules number;
     public static CommonRules common;
-    public static ArrayRules array;
+    public static ArrayRules ARRAY;
 
     public static class ArrayRules {
         public boolean isArray(Object obj) {

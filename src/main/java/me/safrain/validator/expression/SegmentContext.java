@@ -1,16 +1,12 @@
 package me.safrain.validator.expression;
 
-import javafx.scene.shape.Path;
 import me.safrain.validator.ValidationContext;
 import me.safrain.validator.Violation;
 import me.safrain.validator.accessor.ArrayAccessor;
 import me.safrain.validator.accessor.PropertyAccessor;
-import me.safrain.validator.expression.resolver.ExpressionResolver;
 import me.safrain.validator.expression.segments.PathSegment;
 
 import java.lang.reflect.Method;
-import java.util.Iterator;
-import java.util.Stack;
 
 public class SegmentContext {
     private ValidationContext validationContext;
@@ -21,98 +17,90 @@ public class SegmentContext {
     private ValidateCommand validateCommand;
     private Object[] args;
 
-    private Stack<Boolean> suppressStack = new Stack<Boolean>();
+    /**
+     * The suppress lock: who activate suppress mode first?
+     */
+    private PathSegment suppressSegment;
+    /**
+     * If any violation occurred or violations are force suppressed?
+     */
+    private boolean suppress;
 
-    public void notFound() {
-        addViolation(new Violation(method, expression));
+    /**
+     * In an aggregate segment, violation in each segment should be collect only once
+     * Use suppress mode to prevent 'Too many violations' case happens
+     * (Consider each element in a huge array produces a violation)
+     */
+    public void activateSuppressMode(PathSegment segment, boolean force) {
+        if (suppressSegment != null) return;
+        suppressSegment = segment;
+        suppress = force;
     }
 
-    public boolean checkNullOptional(Object object) {
+    public void deactivateSuppressMode(PathSegment segment) {
+        if (suppressSegment != segment) return;
+        suppressSegment = null;
+        suppress = false;
+    }
+
+
+    /**
+     * The object is rejected by the accessor
+     * Add violation to context if expression is not optional
+     */
+    public boolean onRejected(Object object) {
         if (object == null && expression.isOptional()) {
             return true;
         } else {
-            addViolation(new Violation(method, expression));
+            Violation violation = createViolation();
+            violation.setType(Violation.Type.SEGMENT_REJECTED);
+            violation.setObject(object);
+            addViolation(violation);
             return false;
         }
     }
 
+    /**
+     * Call the actual validate method to validate current object
+     * Add violation to context if failed or exception occurred
+     */
+    public boolean onValidation(Object object) {
+        try {
+            if (!validateCommand.validate(object)) {
+                Violation violation = createViolation();
+                violation.setType(Violation.Type.INVALID);
+                violation.setObject(object);
+                addViolation(violation);
+                return false;
+            }
+        } catch (Throwable e) {
+            Violation violation = createViolation();
+            violation.setType(Violation.Type.EXCEPTION);
+            violation.setObject(object);
+            violation.setThrowable(e);
+            addViolation(violation);
+            return false;
+        }
 
-    public boolean hasNextSegment(int index) {
-        return index < expression.getSegments().size() - 1;
+        return true;
     }
 
-    public boolean isObjectValid(Object object) {
-        return object != null && object != ExpressionResolver.NOT_FOUND;
-    }
-
-    public boolean applyWithoutViolation(Object object, int index, boolean optional) {
-        return apply(object, index, optional, false);
-    }
-
-    public boolean applyWithViolation(Object object, int index, boolean optional) {
-        return apply(object, index, optional, true);
-    }
-
-    public boolean isLast(int index) {
+    public boolean isLastSegment(int index) {
         return index == validationContext.scope.size() + expression.getSegments().size() - 1;
     }
 
-    public PathSegment get(int index) {
+    public PathSegment getSegment(int index) {
         return index < validationContext.scope.size() ?
                 validationContext.scope.get(index) :
                 expression.getSegments().get(index - validationContext.scope.size());
     }
 
-    public boolean checkValidation(Object object) {
-        // Call the actual validate method
-        try {
-            if (!validateCommand.validate(object)) {
-                addViolation(new Violation(method, expression, object));
-                return false;
-            }
-            return true;
-        } catch (Throwable e) {
-            addViolation(new Violation(method, expression, object, e));
-            return false;
-        }
-    }
-
-    public boolean apply(Object object, int index, boolean optional, boolean withViolation) {
-        // Check NOT_FOUND first
-        if (object == ExpressionResolver.NOT_FOUND) {
-            if (optional) {
-                return true;
-            } else {
-                if (withViolation) addViolation(new Violation(method, expression, object));
-                return false;
-            }
-        }
-
-        // Has no more segments, call the validate function
-        if (index >= validationContext.scope.size() + expression.getSegments().size()) {
-
-            // For null object & optional express, its success
-            if (object == null && optional) return true;
-
-            // Call the actual validate method
-            try {
-                if (!validateCommand.validate(object)) {
-                    if (withViolation) addViolation(new Violation(method, expression, object));
-                    return false;
-                }
-                return true;
-            } catch (Throwable e) {
-                if (withViolation) addViolation(new Violation(method, expression, object, e));
-                return false;
-            }
-
-        } else {
-            // Call the segment, proceed to next segment
-            PathSegment current = index < validationContext.scope.size() ?
-                    validationContext.scope.get(index) :
-                    expression.getSegments().get(index - validationContext.scope.size());
-            return current.process(object, index, this, optional);
-        }
+    public Violation createViolation() {
+        Violation result = new Violation();
+        result.setExpression(expression);
+        result.setMethod(method);
+        result.setArgs(args);
+        return result;
     }
 
     public void addViolation(Violation violation) {
@@ -129,71 +117,6 @@ public class SegmentContext {
 
     public boolean isViolationSuppressed() {
         return validationContext.manual || suppress;
-    }
-
-
-    PathSegment suppressSegment;
-    boolean suppress;
-
-    public void suppress(PathSegment segment) {
-        if (suppressSegment != null) return;
-        suppressSegment = segment;
-        suppress = false;
-    }
-
-    public void suppressForce(PathSegment segment) {
-        if (suppressSegment != null) return;
-        suppressSegment = segment;
-        suppress = true;
-    }
-
-    public void unsuppress(PathSegment segment) {
-        if (suppressSegment != segment) return;
-        suppressSegment = null;
-        suppress = false;
-    }
-
-    // Used to called by iterative segments
-    public boolean iterativeApplyEvery(Object object, int index, boolean optional, Iterator iterator) {
-        boolean result = true;
-        // In a aggregate segment, violations in each segment should be collect only once
-        // Use this stack to prevent 'Too many violations' case happens
-        // (Consider each element in a huge array produces a violation)
-        if (suppressStack.isEmpty()) {
-            suppressStack.push(false);
-        } else {
-            // Copy stack top to propagate suppress flag
-            suppressStack.push(suppressStack.peek());
-        }
-
-        // Use the given iterator to do the iteration process
-        while (iterator.hasNext()) {
-            Object value = iterator.next();
-            boolean r = applyWithViolation(value, index, optional && !(isObjectValid(object) && !hasNextSegment(index)));
-            result &= r;
-
-            // Set flag on the stack top while an element is invalid
-            if (!r && !suppressStack.peek()) {
-                suppressStack.set(suppressStack.size() - 1, true);
-            }
-        }
-
-        suppressStack.pop();
-
-        return result;
-    }
-
-    public boolean iterativeApplyAny(Object object, int index, boolean optional, Iterator iterator) {
-        // No violation should be added in 'any', just force suppress
-        suppressStack.push(true);
-        while (iterator.hasNext()) {
-            Object value = iterator.next();
-            boolean r = applyWithViolation(value, index, optional && !(isObjectValid(object) && !hasNextSegment(index)));
-            if (r) return true;
-        }
-        suppressStack.pop();
-        addViolation(new Violation("Not found any"));
-        return false;
     }
 
 

@@ -4,17 +4,12 @@ import antlr.generated.EVExpressionBaseListener;
 import antlr.generated.EVExpressionLexer;
 import antlr.generated.EVExpressionParser;
 import me.safrain.validator.expression.Expression;
-import me.safrain.validator.expression.SegmentContext;
 import me.safrain.validator.expression.segments.*;
 import org.antlr.v4.runtime.*;
-import org.antlr.v4.runtime.atn.ATNConfigSet;
-import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class ANTLRExpressionResolver implements ExpressionResolver {
 

@@ -7,15 +7,20 @@ import java.util.List;
 
 public class Expression {
     /**
-     * Original
+     * Raw expression String
      */
     private String expression;
 
+    /**
+     * Segments parsed from raw expression string
+     */
     private List<PathSegment> segments = new ArrayList<PathSegment>();
-
+    /**
+     * Optional flag: the '?' prefix
+     */
     private boolean optional;
     /**
-     * Comment
+     * Comment string from first '#' to the end
      */
     private String comment;
 

@@ -79,7 +79,7 @@ class ExpressionResolverTest {
             assert it.segments.size() == 3
             assert it.segments[0] instanceof PropertySegment
             assert it.segments[1] instanceof PropertySegment
-            assert it.segments[2] instanceof AnyPropertySegment
+            assert it.segments[2] instanceof EveryPropertySegment
         }
     }
 
@@ -99,7 +99,7 @@ class ExpressionResolverTest {
 
         resolver.resolve('s1/s2/*').with {
             assert it.segments[0..1].every { it instanceof PropertySegment }
-            assert it.segments[2] instanceof AnyPropertySegment
+            assert it.segments[2] instanceof EveryPropertySegment
         }
     }
 

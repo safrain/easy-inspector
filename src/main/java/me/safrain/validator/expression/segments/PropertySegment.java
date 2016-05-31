@@ -9,17 +9,17 @@ public class PropertySegment implements PathSegment {
     @Override
     public boolean process(Object object, int index, SegmentContext context, boolean optional) {
         if (!context.getPropertyAccessor().accept(object)) {
-            return context.checkNullOptional(object);
+            return context.onRejected(object);
         }
         if (!context.getPropertyAccessor().accept(object, propertyName)) {
-            return context.checkNullOptional(null);
+            return context.onRejected(null);
         }
 
         Object o = context.getPropertyAccessor().accessProperty(object, propertyName);
-        if (context.isLast(index)) return context.checkValidation(o);
+        if (context.isLastSegment(index)) return context.onValidation(o);
 
 
-        PathSegment next = context.get(index + 1);
+        PathSegment next = context.getSegment(index + 1);
         return next.process(o, index + 1, context, optional);
     }
 

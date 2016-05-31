@@ -7,12 +7,25 @@ import java.util.Arrays;
 import java.util.Iterator;
 
 public class Violation {
+    public enum Type {
+        EXCEPTION, SEGMENT_REJECTED, INVALID
+    }
+
     private Method method;
     private Expression expression;
     private Throwable throwable;
     private String message;
     private Object object;
     private Object[] args;
+    private Type type;
+
+    public Type getType() {
+        return type;
+    }
+
+    public void setType(Type type) {
+        this.type = type;
+    }
 
     public Violation(String message) {
         this.message = message;
