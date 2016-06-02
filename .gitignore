@@ -21,3 +21,7 @@ src/main/antlr/antlr/generated
 
 # gradle
 .gradle/
+
+# idea
+*.ipr
+*.iws
