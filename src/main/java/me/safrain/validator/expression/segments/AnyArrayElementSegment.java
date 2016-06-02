@@ -29,7 +29,10 @@ public class AnyArrayElementSegment implements PathSegment {
         }
 
         if (!context.isViolationSuppressed()) {
-            context.addViolation(new Violation("Not found"));
+            Violation violation = context.createViolation();
+            violation.setMessage("Not found in array");
+            violation.setType(Violation.Type.INVALID);
+            context.addViolation(violation);
         }
         return false;
     }

@@ -26,16 +26,26 @@ class ViolationTest extends BaseTest {
     void violationTypeRejected() {
         inspector.validate([
                 a: [],
-                b: [1, 2]
+                b: [1, 2],
+                c: null
         ]) {
             V.STRING.isString('a/b') // Property
-            V.STRING.isString('a/*') // EveryProperty
-            V.STRING.isString('a/?') // AnyProperty
+
+            // This EveryProperty won't raise a type SEGMENT_REJECTED violation, cause List IS Object
+            // And java.util.ArrayList has no properties(it's an omitted class!)
+            // V.STRING.isString('a/*') // EveryProperty
+
+            // This AnyProperty will raise an INVALID violation due to there is no property in ArrayList
+            // V.STRING.isString('a/?') // AnyProperty
+
+            V.STRING.isString('c/*') // EveryProperty
+            V.STRING.isString('c/?') // AnyProperty
+
             V.STRING.isString('[0]') // ArrayIndexAccess
             V.STRING.isString('[?]') // AnyArrayElement
             V.STRING.isString('[*]') // EvertArrayElement
             V.STRING.isString('[1..3]') // ArrayRangeAccess
-            V.STRING.isString('c') // Property not found
+            V.STRING.isString('d') // Property not found
             V.STRING.isString('b[5]') // Array index not found
             V.STRING.isString('b[1..3]') // Range out of bound
         }.with {

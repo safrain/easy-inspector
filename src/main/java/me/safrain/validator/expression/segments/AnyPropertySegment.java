@@ -27,7 +27,10 @@ public class AnyPropertySegment implements PathSegment {
             context.deactivateSuppressMode(this);
         }
         if (!context.isViolationSuppressed()) {
-            context.addViolation(new Violation("F"));
+            Violation violation = context.createViolation();
+            violation.setMessage("Not found in object");
+            violation.setType(Violation.Type.INVALID);
+            context.addViolation(violation);
         }
         return false;
     }

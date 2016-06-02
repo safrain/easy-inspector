@@ -9,7 +9,7 @@ class OptionalTest extends BaseTest {
         inspector.validate([
                 a: '1'
         ]) {
-            V.STRING.isString '?a/*'
+            V.STRING.isString '?a/[*]'
         }.with {
             assert it
         }
