@@ -9,7 +9,7 @@ class OptionalTest extends BaseTest {
         inspector.validate([
                 a: '1'
         ]) {
-            V.string.isString '?a/*'
+            V.STRING.isString '?a/*'
         }.with {
             assert it
         }
@@ -21,7 +21,7 @@ class OptionalTest extends BaseTest {
         inspector.validate([
                 a: [:]
         ]) {
-            V.string.isString '?a/b/*'
+            V.STRING.isString '?a/b/*'
         }.with {
             assert !it
         }
@@ -32,8 +32,8 @@ class OptionalTest extends BaseTest {
         inspector.validate([
                 a: ''
         ], {
-            V.string.isString('a')
-            V.string.notEmpty('?b')
+            V.STRING.isString('a')
+            V.STRING.notEmpty('?b')
         }).with {
             assert !it
         }
@@ -45,7 +45,7 @@ class OptionalTest extends BaseTest {
         inspector.validate([
                 a: null,
         ]) {
-            V.number.isInteger('?/a/?')
+            V.NUMBER.isInteger('?/a/?')
         }.with {
             assert !it
         }
@@ -55,8 +55,8 @@ class OptionalTest extends BaseTest {
     @Test
     void arrayViolationOptional() {
         inspector.validate([1, 2, [:]]) {
-            V.number.isInteger '?[5]'
-            V.number.isInteger '?[2]/t'
+            V.NUMBER.isInteger '?[5]'
+            V.NUMBER.isInteger '?[2]/t'
         }.with {
             assert !it
         }

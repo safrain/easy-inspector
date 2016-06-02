@@ -8,9 +8,9 @@ class BaseTest {
     @Before
     void setup() {
         inspector = new EasyInspector()
-        V.common = inspector.proxy(V.CommonRules)
-        V.string = inspector.proxy(V.StringRules)
-        V.number = inspector.proxy(V.NumberRules)
+        V.COMMON = inspector.proxy(V.CommonRules)
+        V.STRING = inspector.proxy(V.StringRules)
+        V.NUMBER = inspector.proxy(V.NumberRules)
         V.ARRAY = inspector.proxy(V.ArrayRules)
     }
 

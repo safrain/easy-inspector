@@ -15,7 +15,7 @@ class ViolationTest extends BaseTest {
         inspector.validate([
                 a: ''
         ], {
-            V.string.notEmpty('b #test')
+            V.STRING.notEmpty('b #test')
         }).with {
             assert it.size() == 1
             assert it[0].expression.expression == 'b #test'
@@ -28,16 +28,16 @@ class ViolationTest extends BaseTest {
                 a: [],
                 b: [1, 2]
         ]) {
-            V.string.isString('a/b') // Property
-            V.string.isString('a/*') // EveryProperty
-            V.string.isString('a/?') // AnyProperty
-            V.string.isString('[0]') // ArrayIndexAccess
-            V.string.isString('[?]') // AnyArrayElement
-            V.string.isString('[*]') // EvertArrayElement
-            V.string.isString('[1..3]') // ArrayRangeAccess
-            V.string.isString('c') // Property not found
-            V.string.isString('b[5]') // Array index not found
-            V.string.isString('b[1..3]') // Range out of bound
+            V.STRING.isString('a/b') // Property
+            V.STRING.isString('a/*') // EveryProperty
+            V.STRING.isString('a/?') // AnyProperty
+            V.STRING.isString('[0]') // ArrayIndexAccess
+            V.STRING.isString('[?]') // AnyArrayElement
+            V.STRING.isString('[*]') // EvertArrayElement
+            V.STRING.isString('[1..3]') // ArrayRangeAccess
+            V.STRING.isString('c') // Property not found
+            V.STRING.isString('b[5]') // Array index not found
+            V.STRING.isString('b[1..3]') // Range out of bound
         }.with {
             assert it.size() == 10
             it.each {
@@ -52,7 +52,7 @@ class ViolationTest extends BaseTest {
         inspector.validate([
                 a: null
         ]) {
-            V.common.notNull('a')
+            V.COMMON.notNull('a')
         }.with {
             assert it.size() == 1
             assert it[0].type == Violation.Type.INVALID
@@ -86,7 +86,7 @@ class ViolationTest extends BaseTest {
                         a: [1, '2', '3']
                 ]
         ]) {
-            V.number.isInteger('*/a/[*]')
+            V.NUMBER.isInteger('*/a/[*]')
         }.with {
             // No more than 1 violations because of suppress mode
             assert it.size() == 1
@@ -101,7 +101,7 @@ class ViolationTest extends BaseTest {
                 [a: '2'],
                 [a: 3],
         ]) {
-            V.number.isInteger '[*]/a'
+            V.NUMBER.isInteger '[*]/a'
         }.with {
             assert it.size() == 1
             assert it[0].type == Violation.Type.INVALID
@@ -118,7 +118,7 @@ class ViolationTest extends BaseTest {
                 ],
                 c: '3',
         ]) {
-            V.number.isInteger('/?/?')
+            V.NUMBER.isInteger('/?/?')
         }.with {
             assert it
         }
@@ -131,8 +131,8 @@ class ViolationTest extends BaseTest {
                 b: null,
                 c: '3',
         ]) {
-            V.string.isString '*'
-            V.string.isString '?*'
+            V.STRING.isString '*'
+            V.STRING.isString '?*'
         }.with {
             assert it.size() == 2
             assert it[0].expression.expression == '*'
@@ -147,7 +147,7 @@ class ViolationTest extends BaseTest {
                 b: '2',
                 c: '3',
         ]) {
-            V.number.isInteger('/?')
+            V.NUMBER.isInteger('/?')
         }.with {
             assert it
         }
@@ -155,7 +155,7 @@ class ViolationTest extends BaseTest {
         inspector.validate([
                 :
         ]) {
-            V.number.isInteger('/?')
+            V.NUMBER.isInteger('/?')
         }.with {
             assert it
         }
@@ -165,8 +165,8 @@ class ViolationTest extends BaseTest {
     void manualViolation() {
         inspector.validate([a: null, b: '2'], {
             V.manual({
-                if (!V.string.isString('a')) {
-                    if (V.common.notNull('b')) {
+                if (!V.STRING.isString('a')) {
+                    if (V.COMMON.notNull('b')) {
                         it << new Violation('error')
                     }
                 }

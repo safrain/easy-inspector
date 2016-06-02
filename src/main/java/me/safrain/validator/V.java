@@ -7,9 +7,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class V {
-    public static StringRules string;
-    public static NumberRules number;
-    public static CommonRules common;
+    public static StringRules STRING;
+    public static NumberRules NUMBER;
+    public static CommonRules COMMON;
     public static ArrayRules ARRAY;
 
     public static class ArrayRules {
