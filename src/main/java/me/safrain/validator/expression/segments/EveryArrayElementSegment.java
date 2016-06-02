@@ -8,7 +8,7 @@ public class EveryArrayElementSegment implements PathSegment {
 
     @Override
     public boolean process(final Object object, int index, final SegmentContext context, boolean optional) {
-        if (!context.getArrayAccessor().accept(object)) {
+        if (!context.getArrayAccessor().acceptType(object)) {
             return context.onRejected(object);
         }
         int size = context.getArrayAccessor().size(object);

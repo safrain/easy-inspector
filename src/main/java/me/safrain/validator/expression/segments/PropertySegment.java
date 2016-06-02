@@ -8,10 +8,10 @@ public class PropertySegment implements PathSegment {
 
     @Override
     public boolean process(Object object, int index, SegmentContext context, boolean optional) {
-        if (!context.getPropertyAccessor().accept(object)) {
+        if (!context.getPropertyAccessor().acceptType(object)) {
             return context.onRejected(object);
         }
-        if (!context.getPropertyAccessor().accept(object, propertyName)) {
+        if (!context.getPropertyAccessor().acceptAccess(object, propertyName)) {
             return context.onRejected(null);
         }
 

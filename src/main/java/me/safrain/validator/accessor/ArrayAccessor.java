@@ -1,9 +1,9 @@
 package me.safrain.validator.accessor;
 
 public interface ArrayAccessor {
-    boolean accept(Object object, int index);
+    boolean acceptAccess(Object object, int index);
 
-    boolean accept(Object object);
+    boolean acceptType(Object object);
 
     int size(Object object);
 

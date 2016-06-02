@@ -7,7 +7,7 @@ public class EveryPropertySegment implements PathSegment {
 
     @Override
     public boolean process(final Object object, int index, final SegmentContext context, boolean optional) {
-        if (!context.getPropertyAccessor().accept(object)) {
+        if (!context.getPropertyAccessor().acceptType(object)) {
             return context.onRejected(object);
         }
         context.activateSuppressMode(this, false);

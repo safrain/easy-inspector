@@ -26,13 +26,13 @@ public class EasyInspector {
 
     PropertyAccessor propertyAccessor = new PropertyAccessor() {
         @Override
-        public boolean accept(Object object) {
+        public boolean acceptType(Object object) {
             if (!(object instanceof Map)) return false;
             return true;
         }
 
         @Override
-        public boolean accept(Object object, String propertyName) {
+        public boolean acceptAccess(Object object, String propertyName) {
             if (!((Map) object).keySet().contains(propertyName)) {
                 return false;
             }
@@ -56,7 +56,7 @@ public class EasyInspector {
 
     ArrayAccessor arrayAccessor = new ArrayAccessor() {
         @Override
-        public boolean accept(Object object, int index) {
+        public boolean acceptAccess(Object object, int index) {
             if (object == null) return false;
             if (!(object instanceof List) &&
                     !(object.getClass().isArray())) {
@@ -69,7 +69,7 @@ public class EasyInspector {
         }
 
         @Override
-        public boolean accept(Object object) {
+        public boolean acceptType(Object object) {
             if (object == null) return false;
             if (object instanceof List) return true;
             if (object.getClass().isArray()) return true;

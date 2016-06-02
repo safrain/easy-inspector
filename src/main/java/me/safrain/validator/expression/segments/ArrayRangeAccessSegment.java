@@ -15,7 +15,7 @@ public class ArrayRangeAccessSegment implements PathSegment {
 
     @Override
     public boolean process(final Object object, int index, final SegmentContext context, boolean optional) {
-        if (!context.getArrayAccessor().accept(object)) {
+        if (!context.getArrayAccessor().acceptType(object)) {
             return context.onRejected(object);
         }
         int size = context.getArrayAccessor().size(object);
@@ -24,7 +24,7 @@ public class ArrayRangeAccessSegment implements PathSegment {
         int actualIndexTo = arrayIndexTo > 0 ? arrayIndexTo : size + arrayIndexTo;
 
         // Check out of bound
-        if (!context.getArrayAccessor().accept(object, actualIndexFrom) || !context.getArrayAccessor().accept(object, actualIndexTo)) {
+        if (!context.getArrayAccessor().acceptAccess(object, actualIndexFrom) || !context.getArrayAccessor().acceptAccess(object, actualIndexTo)) {
             return context.onRejected(null);
         }
 

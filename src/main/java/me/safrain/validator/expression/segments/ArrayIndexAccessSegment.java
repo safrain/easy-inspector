@@ -12,10 +12,10 @@ public class ArrayIndexAccessSegment implements PathSegment {
 
     @Override
     public boolean process(Object object, int index, SegmentContext context, boolean optional) {
-        if (!context.getArrayAccessor().accept(object)) {
+        if (!context.getArrayAccessor().acceptType(object)) {
             return context.onRejected(object);
         }
-        if (!context.getArrayAccessor().accept(object, arrayIndex)) {
+        if (!context.getArrayAccessor().acceptAccess(object, arrayIndex)) {
             return context.onRejected(null);
         }
 
