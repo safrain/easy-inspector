@@ -18,7 +18,7 @@ public class ReflectionAccessDescriptor {
     private ReflectionAccessDescriptor() {
     }
 
-    public ReflectionAccessDescriptor(Class<?> type, String propertyName) {
+    public ReflectionAccessDescriptor(List<Class<?>> classList, String propertyName) {
         this.propertyName = propertyName;
         // For raw object, check getter first, then check field
         String baseName;
@@ -36,16 +36,16 @@ public class ReflectionAccessDescriptor {
 
         String getMethodName = GET_PREFIX + baseName;
         String isMethodName = IS_PREFIX + baseName;
-        method = findGetter(type, getMethodName);
-        if (method == null) method = findGetter(type, isMethodName);
-        if (method == null) field = findField(type, propertyName);
+
+        method = findGetter(classList, getMethodName);
+        if (method == null) method = findGetter(classList, isMethodName);
+        if (method == null) field = findField(classList, propertyName);
     }
 
 
-    public static List<ReflectionAccessDescriptor> createDescriptorList(Class<?> type) {
+    public static List<ReflectionAccessDescriptor> createDescriptorList(List<Class<?>> classList) {
         Map<String, Object> map = new HashMap<String, Object>();
         // Collect all fields
-        List<Class<?>> classList = getViableClassList(type);
         for (Class<?> c : classList) {
             for (Field field : c.getDeclaredFields()) {
                 if (!isPropertyField(field)) continue;
@@ -116,8 +116,8 @@ public class ReflectionAccessDescriptor {
         throw new IllegalStateException();
     }
 
-    Field findField(Class<?> clz, String fieldName) {
-        for (Class<?> c : getViableClassList(clz)) {
+    Field findField(List<Class<?>> classList, String fieldName) {
+        for (Class<?> c : classList) {
             Field field;
             try {
                 field = c.getDeclaredField(fieldName);
@@ -132,8 +132,8 @@ public class ReflectionAccessDescriptor {
 
     }
 
-    Method findGetter(Class<?> clz, String methodName) {
-        for (Class<?> c : getViableClassList(clz)) {
+    Method findGetter(List<Class<?>> classList, String methodName) {
+        for (Class<?> c : classList) {
             Method method;
             try {
                 method = c.getMethod(methodName);
@@ -145,24 +145,6 @@ public class ReflectionAccessDescriptor {
         }
         return null;
     }
-
-    static List<Class<?>> getViableClassList(Class<?> type) {
-        List<Class<?>> result = new ArrayList<Class<?>>();
-        for (Class<?> c = type; c != null && !isOmittedClass(c); c = c.getSuperclass()) {
-            result.add(c);
-        }
-        return result;
-    }
-
-    static boolean isOmittedClass(Class<?> type) {
-        if (type.isPrimitive()) return true;
-        String packageName = type.getPackage().getName();
-        if (packageName.startsWith("java.")) return true;
-        if (packageName.startsWith("javax.")) return true;
-        if (packageName.startsWith("jdk.")) return true;
-        return false;
-    }
-
 
     static boolean isPropertyField(Field field) {
         if (Modifier.isStatic(field.getModifiers())) return false;

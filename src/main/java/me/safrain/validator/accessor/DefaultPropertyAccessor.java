@@ -1,23 +1,27 @@
 package me.safrain.validator.accessor;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class DefaultPropertyAccessor implements PropertyAccessor {
-    Map<ReflectionAccessDescriptor.Key, ReflectionAccessDescriptor> accessCache = new ConcurrentHashMap<ReflectionAccessDescriptor.Key, ReflectionAccessDescriptor>();
-    Map<Class<?>, List<String>> listNameCache = new ConcurrentHashMap<Class<?>, List<String>>();
+    private Map<ReflectionAccessDescriptor.Key, ReflectionAccessDescriptor> accessCache = new ConcurrentHashMap<ReflectionAccessDescriptor.Key, ReflectionAccessDescriptor>();
+    private Map<Class<?>, List<String>> listNameCache = new ConcurrentHashMap<Class<?>, List<String>>();
 
-    ReflectionAccessDescriptor getAccessDescriptor(Object object, String propertyName) {
+    private List<String> omittedPackages = Arrays.asList("java", "javax", "sun", "jdk");
+
+    private ReflectionAccessDescriptor getAccessDescriptor(Object object, String propertyName) {
         ReflectionAccessDescriptor.Key key = new ReflectionAccessDescriptor.Key();
         key.type = object.getClass();
         key.propertyName = propertyName;
 
         ReflectionAccessDescriptor descriptor = accessCache.get(key);
         if (descriptor == null) {
-            descriptor = new ReflectionAccessDescriptor(key.type, key.propertyName);
-            if (descriptor.field == null || descriptor.method == null) descriptor = ReflectionAccessDescriptor.NULL_DESCRIPTOR;
+            descriptor = new ReflectionAccessDescriptor(getViableClassList(key.type), key.propertyName);
+            if (descriptor.field == null || descriptor.method == null)
+                descriptor = ReflectionAccessDescriptor.NULL_DESCRIPTOR;
             accessCache.put(key, descriptor);
         }
         return descriptor != ReflectionAccessDescriptor.NULL_DESCRIPTOR ? descriptor : null;
@@ -61,7 +65,7 @@ public class DefaultPropertyAccessor implements PropertyAccessor {
         List<String> result = listNameCache.get(type);
         if (result == null) {
             result = new ArrayList<String>();
-            for (ReflectionAccessDescriptor descriptor : ReflectionAccessDescriptor.createDescriptorList(object.getClass())) {
+            for (ReflectionAccessDescriptor descriptor : ReflectionAccessDescriptor.createDescriptorList(getViableClassList(object.getClass()))) {
                 // TODO filter unwanted properties here
                 ReflectionAccessDescriptor.Key key = new ReflectionAccessDescriptor.Key();
                 key.type = type;
@@ -72,6 +76,31 @@ public class DefaultPropertyAccessor implements PropertyAccessor {
             listNameCache.put(type, result);
         }
         return result;
+    }
+
+    private List<Class<?>> getViableClassList(Class<?> type) {
+        List<Class<?>> result = new ArrayList<Class<?>>();
+        for (Class<?> c = type; c != null && !isOmittedClass(c); c = c.getSuperclass()) {
+            result.add(c);
+        }
+        return result;
+    }
+
+    private boolean isOmittedClass(Class<?> type) {
+        if (type.isPrimitive()) return true;
+        String packageName = type.getPackage().getName();
+        for (String p : omittedPackages) {
+            if (packageName.equals(p) || packageName.startsWith(p + ".")) return true;
+        }
+        return false;
+    }
+
+    public List<String> getOmittedPackages() {
+        return omittedPackages;
+    }
+
+    public void setOmittedPackages(List<String> omittedPackages) {
+        this.omittedPackages = omittedPackages;
     }
 }
 

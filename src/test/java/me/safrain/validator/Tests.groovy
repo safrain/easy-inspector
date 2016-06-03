@@ -196,12 +196,12 @@ class Tests extends BaseTest {
                 c: [1],
         ]) {
             V.STRING.notEmpty('a[0]')
-//            V.STRING.notEmpty('a[1]')
-//            V.STRING.notEmpty('a[2]')
-//            V.STRING.notEmpty('a/[2]')
-//            V.COMMON.isEquals('a[-1]', '3')
-//            V.COMMON.isEquals('a[-2]', '2')
-//            V.COMMON.isEquals('c[-1]', 1)
+            V.STRING.notEmpty('a[1]')
+            V.STRING.notEmpty('a[2]')
+            V.STRING.notEmpty('a/[2]')
+            V.COMMON.isEquals('a[-1]', '3')
+            V.COMMON.isEquals('a[-2]', '2')
+            V.COMMON.isEquals('c[-1]', 1)
         }.with {
             assert !it
         }
