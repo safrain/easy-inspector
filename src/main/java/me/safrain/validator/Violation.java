@@ -74,7 +74,8 @@ public class Violation {
                 method != null ? "command=" + getCommand() : null,
                 expression != null ? "expression=" + expression.getExpression() : null,
                 message != null ? "message=" + message : null,
-                args != null ? "args=" + Arrays.toString(args) : null
+                args != null ? "args=" + Arrays.toString(args) : null,
+                type != null ? "type=" + type.name() : null
         ).iterator(); iterator.hasNext(); ) {
             String string = iterator.next();
             if (string == null) continue;

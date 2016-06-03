@@ -20,7 +20,7 @@ public class DefaultPropertyAccessor implements PropertyAccessor {
         ReflectionAccessDescriptor descriptor = accessCache.get(key);
         if (descriptor == null) {
             descriptor = new ReflectionAccessDescriptor(getViableClassList(key.type), key.propertyName);
-            if (descriptor.field == null || descriptor.method == null)
+            if (descriptor.field == null && descriptor.method == null)
                 descriptor = ReflectionAccessDescriptor.NULL_DESCRIPTOR;
             accessCache.put(key, descriptor);
         }
