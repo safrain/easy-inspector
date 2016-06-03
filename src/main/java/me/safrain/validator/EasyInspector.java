@@ -20,14 +20,14 @@ import java.util.List;
 import java.util.Map;
 
 public class EasyInspector {
-    ExpressionResolver expressionResolver = new CachingExpressionResolver(new ANTLRExpressionResolver());
-
     public static ThreadLocal<ValidationContext> contextThreadLocal = new InheritableThreadLocal<ValidationContext>();
 
+    private ExpressionResolver expressionResolver;
     private PropertyAccessor propertyAccessor;
     private ArrayAccessor arrayAccessor;
 
     public EasyInspector(Config config) {
+        expressionResolver = config.getExpressionResolver();
         propertyAccessor = config.getPropertyAccessor();
         arrayAccessor = config.getArrayAccessor();
     }
@@ -36,8 +36,8 @@ public class EasyInspector {
         ValidationContext context = contextThreadLocal.get();
         if (context == null) {
             context = new ValidationContext();
+            context.setEasyInspector(this);
             contextThreadLocal.set(context);
-            context.easyInspector = this;
         }
         context.push(object);
         try {
@@ -48,7 +48,7 @@ public class EasyInspector {
         if (context.isStackEmpty()) {
             contextThreadLocal.remove();
         }
-        return context.violations;
+        return context.getViolations();
     }
 
     public <T> T proxy(final Class clz) {
@@ -70,8 +70,6 @@ public class EasyInspector {
                 segmentContext.setValidationContext(context);
                 segmentContext.setMethod(method);
                 segmentContext.setExpression(expression);
-                segmentContext.setPropertyAccessor(propertyAccessor);
-                segmentContext.setArrayAccessor(arrayAccessor);
                 segmentContext.setArgs(args);
                 segmentContext.setValidateCommand(new ValidateCommand() {
                     @Override
@@ -89,5 +87,29 @@ public class EasyInspector {
         });
 
         return (T) enhancer.create();
+    }
+
+    public ExpressionResolver getExpressionResolver() {
+        return expressionResolver;
+    }
+
+    public void setExpressionResolver(ExpressionResolver expressionResolver) {
+        this.expressionResolver = expressionResolver;
+    }
+
+    public PropertyAccessor getPropertyAccessor() {
+        return propertyAccessor;
+    }
+
+    public void setPropertyAccessor(PropertyAccessor propertyAccessor) {
+        this.propertyAccessor = propertyAccessor;
+    }
+
+    public ArrayAccessor getArrayAccessor() {
+        return arrayAccessor;
+    }
+
+    public void setArrayAccessor(ArrayAccessor arrayAccessor) {
+        this.arrayAccessor = arrayAccessor;
     }
 }

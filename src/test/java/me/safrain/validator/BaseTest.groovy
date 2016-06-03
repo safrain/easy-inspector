@@ -2,6 +2,8 @@ package me.safrain.validator
 
 import me.safrain.validator.accessor.DefaultArrayAccessor
 import me.safrain.validator.accessor.DefaultPropertyAccessor
+import me.safrain.validator.expression.resolver.ANTLRExpressionResolver
+import me.safrain.validator.expression.resolver.CachingExpressionResolver
 import org.junit.Before
 
 class BaseTest {
@@ -10,6 +12,7 @@ class BaseTest {
     @Before
     void setup() {
         inspector = new EasyInspector(new Config(
+                expressionResolver: new CachingExpressionResolver(new ANTLRExpressionResolver()),
                 propertyAccessor: new DefaultPropertyAccessor(),
                 arrayAccessor: new DefaultArrayAccessor()
         ))

@@ -12,8 +12,6 @@ public class SegmentContext {
     private ValidationContext validationContext;
     private Method method;
     private Expression expression;
-    private PropertyAccessor propertyAccessor;
-    private ArrayAccessor arrayAccessor;
     private ValidateCommand validateCommand;
     private Object[] args;
 
@@ -86,13 +84,13 @@ public class SegmentContext {
     }
 
     public boolean isLastSegment(int index) {
-        return index == validationContext.scope.size() + expression.getSegments().size() - 1;
+        return index == validationContext.getScope().size() + expression.getSegments().size() - 1;
     }
 
     public PathSegment getSegment(int index) {
-        return index < validationContext.scope.size() ?
-                validationContext.scope.get(index) :
-                expression.getSegments().get(index - validationContext.scope.size());
+        return index < validationContext.getScope().size() ?
+                validationContext.getScope().get(index) :
+                expression.getSegments().get(index - validationContext.getScope().size());
     }
 
     public Violation createViolation() {
@@ -111,12 +109,12 @@ public class SegmentContext {
                 System.arraycopy(args, 1, a, 0, args.length - 1);
                 violation.setArgs(a);
             }
-            validationContext.violations.add(violation);
+            validationContext.getViolations().add(violation);
         }
     }
 
     public boolean isViolationSuppressed() {
-        return validationContext.manual || suppress;
+        return validationContext.isManual() || suppress;
     }
 
 
@@ -145,19 +143,12 @@ public class SegmentContext {
     }
 
     public PropertyAccessor getPropertyAccessor() {
-        return propertyAccessor;
+        return validationContext.getEasyInspector().getPropertyAccessor();
     }
 
-    public void setPropertyAccessor(PropertyAccessor propertyAccessor) {
-        this.propertyAccessor = propertyAccessor;
-    }
 
     public ArrayAccessor getArrayAccessor() {
-        return arrayAccessor;
-    }
-
-    public void setArrayAccessor(ArrayAccessor arrayAccessor) {
-        this.arrayAccessor = arrayAccessor;
+        return validationContext.getEasyInspector().getArrayAccessor();
     }
 
     public ValidateCommand getValidateCommand() {

@@ -1,8 +1,11 @@
 package me.safrain.validator;
 
 import me.safrain.validator.expression.Expression;
+import me.safrain.validator.expression.SegmentContext;
+import me.safrain.validator.expression.ValidateCommand;
 
 import java.lang.reflect.Array;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -87,29 +90,67 @@ public class V {
         }
     }
 
-    public static Object get(String expression) {
-        ValidationContext context = EasyInspector.contextThreadLocal.get();
-        return null;
+
+    static class Holder implements ValidateCommand {
+        ArrayList<Object> result = new ArrayList<Object>();
+
+        @Override
+        public boolean validate(Object object) throws Throwable {
+            result.add(object);
+            return true;
+        }
     }
+
+    public static Object get(String expression) {
+        List<Object> result = getAll(expression);
+        if (result.isEmpty()) return null;
+        return result.get(0);
+    }
+
+    static Method GET_ALL_METHOD;
+
+    static {
+        try {
+            GET_ALL_METHOD = V.class.getDeclaredMethod("getAll", String.class);
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException();
+        }
+    }
+
+    public static List<Object> getAll(String expression) {
+        ValidationContext context = EasyInspector.contextThreadLocal.get();
+        Expression exp = context.getEasyInspector().getExpressionResolver().resolve(expression);
+        SegmentContext segmentContext = new SegmentContext();
+        segmentContext.setValidationContext(context);
+        segmentContext.setMethod(GET_ALL_METHOD);
+        segmentContext.setExpression(exp);
+        segmentContext.setArgs(new Object[]{expression});
+        Holder holder = new Holder();
+        segmentContext.setValidateCommand(holder);
+        segmentContext.activateSuppressMode(exp.getSegments().get(0), true);
+        segmentContext.getExpression().getSegments().get(0).process(context.getRootObject(), 0, segmentContext, true);
+        return holder.result;
+    }
+
 
     public static void scope(String expression, Runnable closure) {
         ValidationContext context = EasyInspector.contextThreadLocal.get();
-        Expression exp = context.easyInspector.expressionResolver.resolve(expression);
-        context.scope.addAll(exp.getSegments());
+        Expression exp = context.getEasyInspector().getExpressionResolver().resolve(expression);
+        context.getScope().addAll(exp.getSegments());
         closure.run();
         for (int i = 0; i < exp.getSegments().size(); i++) {
-            context.scope.remove(context.scope.size() - 1);
+            context.getScope().remove(context.getScope().size() - 1);
         }
 
     }
 
     public static void manual(Manual manual) {
         ValidationContext context = EasyInspector.contextThreadLocal.get();
-        context.manual = true;
+        context.setManual(true);
         List<Violation> violations = new ArrayList<Violation>();
         manual.validate(violations);
-        context.violations.addAll(violations);
-        context.manual = false;
+        context.getViolations().addAll(violations);
+        context.setManual(false);
     }
 
     public interface Manual {

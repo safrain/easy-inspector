@@ -9,12 +9,12 @@ import java.util.List;
 
 public class ValidationContext {
     private Deque<Object> targetStack = new ArrayDeque<Object>();
-    public List<Violation> violations = new ArrayList<Violation>();
+    private List<Violation> violations = new ArrayList<Violation>();
 
-    public List<PathSegment> scope = new ArrayList<PathSegment>();
-    EasyInspector easyInspector;
+    private List<PathSegment> scope = new ArrayList<PathSegment>();
+    private EasyInspector easyInspector;
 
-    public boolean manual;
+    private boolean manual;
 
     public Object getRootObject() {
         return targetStack.peek();
@@ -33,4 +33,35 @@ public class ValidationContext {
         return targetStack.isEmpty();
     }
 
+    public EasyInspector getEasyInspector() {
+        return easyInspector;
+    }
+
+    public void setEasyInspector(EasyInspector easyInspector) {
+        this.easyInspector = easyInspector;
+    }
+
+    public List<Violation> getViolations() {
+        return violations;
+    }
+
+    public void setViolations(List<Violation> violations) {
+        this.violations = violations;
+    }
+
+    public List<PathSegment> getScope() {
+        return scope;
+    }
+
+    public void setScope(List<PathSegment> scope) {
+        this.scope = scope;
+    }
+
+    public boolean isManual() {
+        return manual;
+    }
+
+    public void setManual(boolean manual) {
+        this.manual = manual;
+    }
 }
